@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>菜の花合唱団 練習サイト</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: #fffdf5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #f5c842 0%, #e8a020 100%);
+      color: white;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .countdown-bar {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .countdown-item {
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .countdown-item .days {
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    @media (min-width: 480px) {
+      .countdown-bar {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .song-section {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .song-title {
+      background: #f5c842;
+      color: #5a3e00;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .song-title span.icon {
+      font-size: 1.3rem;
+    }
+
+    .track-list {
+      padding: 8px 0;
+    }
+
+    .track {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+      transition: background 0.15s;
+    }
+
+    .track:last-child {
+      border-bottom: none;
+    }
+
+    .track:hover {
+      background: #fffbee;
+    }
+
+    .track-label {
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
+    .part-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 3px;
+    }
+
+    .badge-soprano { background: #fde8f5; color: #b03080; }
+    .badge-alto    { background: #e8f0fd; color: #2050c0; }
+    .badge-both    { background: #edfde8; color: #207030; }
+    .badge-piano   { background: #fdf3e8; color: #a05010; }
+
+    .track-name {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    audio {
+      width: 100%;
+      max-width: 260px;
+      height: 36px;
+      accent-color: #e8a020;
+    }
+
+    .score-section {
+      border-top: 1px solid #f0f0f0;
+      padding: 14px 16px;
+    }
+
+    .score-heading {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #888;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .score-images {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .score-images a {
+      display: block;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 2px solid #eee;
+      transition: border-color 0.15s;
+    }
+
+    .score-images a:hover {
+      border-color: #f5c842;
+    }
+
+    .score-images img {
+      display: block;
+      height: 100px;
+      width: auto;
+      object-fit: cover;
+    }
+
+    .score-pdf-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff3e0;
+      color: #b05000;
+      border: 1.5px solid #f5c842;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .score-pdf-link:hover {
+      background: #ffe0b2;
+    }
+
+    /* ── 楽譜シート ── */
+    .sheet-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .sheet-overlay.open { display: block; }
+
+    .score-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 88vh;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .score-sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .sheet-title {
+      font-weight: bold;
+      font-size: 1rem;
+      color: #5a3e00;
+    }
+
+    .sheet-close {
+      background: #f0f0f0;
+      border: none;
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pdf-outer {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      background: #666;
+      touch-action: none;
+    }
+
+    .pdf-inner {
+      position: relative;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .pdf-inner canvas {
+      display: block;
+      margin-bottom: 4px;
+      background: white;
+    }
+
+    .pdf-loading {
+      color: #eee;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 0.95rem;
+    }
+
+    .parts-section {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .parts-title {
+      background: #f5c842;
+      color: #5a3e00;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .parts-body {
+      padding: 16px;
+    }
+
+    .parts-body img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .note {
+      text-align: center;
+      color: #999;
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 500px) {
+      .track {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      audio {
+        max-width: 100%;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌸 菜の花合唱団</h1>
+  <p>練習用音源サイト</p>
+  <div class="countdown-bar">
+    <div class="countdown-item">🎼 6/21 SOKAファミリー音楽祭まであと <span class="days" id="days1">...</span> 日！</div>
+    <div class="countdown-item">🎵 7/25 日中音楽交流大会まであと <span class="days" id="days2">...</span> 日！</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- DREAM -->
+  <section class="song-section">
+    <div class="song-title">
+      <span class="icon">🎵</span> DREAM
+    </div>
+    <div class="track-list">
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-both">全パート</span>
+          <span class="track-name">本番の速さ</span>
+        </div>
+        <audio controls src="DREAM_honban.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-soprano">ソプラノ</span>
+          <span class="track-name">ゆっくり練習用</span>
+        </div>
+        <audio controls src="DREAM_soprano_slow.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-soprano">ソプラノ</span>
+          <span class="track-name">歌声入り</span>
+        </div>
+        <audio controls src="DREAM_soprano_voice.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-alto">アルト</span>
+          <span class="track-name">ゆっくり練習用</span>
+        </div>
+        <audio controls src="DREAM_alto_slow.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-alto">アルト</span>
+          <span class="track-name">歌声入り</span>
+        </div>
+        <audio controls src="DREAM_alto_voice.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-piano">伴奏</span>
+          <span class="track-name">伴奏のみ</span>
+        </div>
+        <audio controls src="DREAM_piano.m4a"></audio>
+      </div>
+
+    </div>
+    <div class="score-section">
+      <div class="score-heading">📄 楽譜</div>
+      <button class="score-pdf-link" onclick="openSheet('DREAM_score.pdf', 'DREAM 楽譜')">📖 楽譜を見る</button>
+    </div>
+  </section>
+
+  <!-- 手をつなごう -->
+  <section class="song-section">
+    <div class="song-title">
+      <span class="icon">🎵</span> 手をつなごう
+    </div>
+    <div class="track-list">
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-both">２声合わせ</span>
+          <span class="track-name">２声</span>
+        </div>
+        <audio controls src="tewotsunagow_2voice.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-soprano">ソプラノ</span>
+          <span class="track-name">ソプラノパート</span>
+        </div>
+        <audio controls src="tewotsunagow_soprano.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-alto">アルト</span>
+          <span class="track-name">アルトパート</span>
+        </div>
+        <audio controls src="tewotsunagow_alto.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-piano">伴奏</span>
+          <span class="track-name">伴奏のみ</span>
+        </div>
+        <audio controls src="tewotsunagow_piano.m4a"></audio>
+      </div>
+
+    </div>
+    <div class="score-section">
+      <div class="score-heading">📄 楽譜</div>
+      <button class="score-pdf-link" onclick="openSheet('tewotsunagow_score.pdf', '手をつなごう 楽譜')">📖 楽譜を見る</button>
+    </div>
+  </section>
+
+  <!-- 紫金草 -->
+  <section class="song-section">
+    <div class="song-title">
+      <span class="icon">🎵</span> 紫金草
+    </div>
+    <div style="background:#fff3cd; color:#7a5000; font-size:0.85rem; padding:10px 16px; display:flex; align-items:center; gap:6px;">
+      <span>⚠️</span>
+      <span>この曲は <strong>7/25 日中音楽交流大会</strong> でのみ歌います。6/21 SOKAファミリー音楽祭では歌いません。</span>
+    </div>
+    <div class="track-list">
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-both">全パート</span>
+          <span class="track-name">フル</span>
+        </div>
+        <audio controls src="shikinsou_full.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-soprano">ソプラノ</span>
+          <span class="track-name">ソプラノパート</span>
+        </div>
+        <audio controls src="shikinsou_soprano.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-alto">アルト</span>
+          <span class="track-name">アルトパート</span>
+        </div>
+        <audio controls src="shikinsou_alto.m4a"></audio>
+      </div>
+
+      <div class="track">
+        <div class="track-label">
+          <span class="part-badge badge-piano">伴奏</span>
+          <span class="track-name">伴奏のみ</span>
+        </div>
+        <audio controls src="shikinsou_piano.m4a"></audio>
+      </div>
+
+    </div>
+    <div class="score-section">
+      <div class="score-heading">📄 楽譜</div>
+      <button class="score-pdf-link" onclick="openSheet('shikinsou_score.pdf', '紫金草 楽譜')">📖 楽譜を見る</button>
+    </div>
+  </section>
+
+  <!-- パート分け一覧 -->
+  <section class="parts-section">
+    <div class="parts-title">
+      <span>👥</span> パート分け一覧
+    </div>
+    <div class="parts-body">
+      <img src="parts.png" alt="パート分け一覧">
+    </div>
+  </section>
+
+  <p class="note">※ このページは音源ファイルと同じフォルダに置いてご利用ください</p>
+
+</main>
+
+<!-- 楽譜シート -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="score-sheet" id="scoreSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title" id="sheetTitle">楽譜</span>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="pdf-outer" id="pdfOuter">
+    <div class="pdf-inner" id="pdfInner">
+      <p class="pdf-loading">楽譜を読み込んでいます…</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  /* ── PDF描画 ── */
+  async function loadPDF(src) {
+    const outer = document.getElementById('pdfOuter');
+    const inner = document.getElementById('pdfInner');
+    inner.innerHTML = '<p class="pdf-loading">読み込み中…</p>';
+    resetZoom();
+
+    const pdf = await pdfjsLib.getDocument(src).promise;
+    inner.innerHTML = '';
+    const W = outer.clientWidth;
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const vp0  = page.getViewport({ scale: 1 });
+      const dpr  = window.devicePixelRatio || 1;
+      const scale = (W / vp0.width) * dpr;
+      const vp   = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = (vp.height / dpr) + 'px';
+      canvas.style.display = 'block';
+      canvas.style.marginBottom = '4px';
+
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      inner.appendChild(canvas);
+    }
+  }
+
+  /* ── ピンチズーム＋パン ── */
+  let pz = { scale: 1, tx: 0, ty: 0 };
+  let touch = {};
+
+  function applyTransform() {
+    pz.scale = Math.min(Math.max(pz.scale, 0.9), 6);
+    document.getElementById('pdfInner').style.transform =
+      `translate(${pz.tx}px,${pz.ty}px) scale(${pz.scale})`;
+  }
+
+  function resetZoom() {
+    pz = { scale: 1, tx: 0, ty: 0 };
+    applyTransform();
+  }
+
+  function getTouchDist(t) {
+    const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+  function getTouchMid(t) {
+    return { x: (t[0].clientX + t[1].clientX) / 2,
+             y: (t[0].clientY + t[1].clientY) / 2 };
+  }
+
+  const outer = document.getElementById('pdfOuter');
+
+  outer.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      touch.dist0  = getTouchDist(e.touches);
+      touch.scale0 = pz.scale;
+      const m = getTouchMid(e.touches);
+      touch.midX0 = m.x; touch.midY0 = m.y;
+      touch.tx0 = pz.tx; touch.ty0 = pz.ty;
+    } else {
+      touch.x = e.touches[0].clientX;
+      touch.y = e.touches[0].clientY;
+    }
+  }, { passive: false });
+
+  outer.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const newScale = touch.scale0 * getTouchDist(e.touches) / touch.dist0;
+      const ratio    = newScale / touch.scale0;
+      const m        = getTouchMid(e.touches);
+      pz.scale = newScale;
+      pz.tx = m.x - ratio * (touch.midX0 - touch.tx0);
+      pz.ty = m.y - ratio * (touch.midY0 - touch.ty0);
+    } else if (e.touches.length === 1) {
+      pz.tx += e.touches[0].clientX - touch.x;
+      pz.ty += e.touches[0].clientY - touch.y;
+      touch.x = e.touches[0].clientX;
+      touch.y = e.touches[0].clientY;
+    }
+    applyTransform();
+  }, { passive: false });
+
+  outer.addEventListener('touchend', () => {
+    if (pz.scale < 1) { pz.scale = 1; pz.tx = 0; pz.ty = 0; applyTransform(); }
+  });
+
+  /* ── シート開閉 ── */
+  function openSheet(src, title) {
+    document.getElementById('sheetTitle').textContent = title;
+    document.getElementById('sheetOverlay').classList.add('open');
+    document.getElementById('scoreSheet').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    loadPDF(src);
+  }
+  function closeSheet() {
+    document.getElementById('sheetOverlay').classList.remove('open');
+    document.getElementById('scoreSheet').classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('pdfInner').innerHTML = '';
+    resetZoom();
+  }
+</script>
+
+<script>
+  function daysUntil(year, month, day) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(year, month - 1, day);
+    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  }
+  document.getElementById('days1').textContent = daysUntil(2026, 6, 21);
+  document.getElementById('days2').textContent = daysUntil(2026, 7, 25);
+</script>
+</body>
+</html>
